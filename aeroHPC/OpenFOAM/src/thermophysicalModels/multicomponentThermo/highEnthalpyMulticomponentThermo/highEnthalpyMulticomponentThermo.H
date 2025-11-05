@@ -39,6 +39,7 @@ SourceFiles
 #ifndef highEnthalpyMulticomponentThermo_H
 #define highEnthalpyMulticomponentThermo_H
 
+#include "HighEnthalpyMulticomponentThermo.H"
 #include "psiThermo.H"
 #include "fluidMulticomponentThermo.H"
 
@@ -69,7 +70,7 @@ public:
         //- The derived type
         template<class MixtureType>
         using DerivedThermoType =
-            FluidMulticomponentThermo
+            HighEnthalpyMulticomponentThermo
             <
                 MulticomponentThermo
                 <
@@ -81,14 +82,6 @@ public:
             >;
 
 
-       //- The derived name
-        static word derivedThermoName()
-        {
-            return "highEnthalpyThermo";
-        }
-
-
-    
     //- Runtime type information
     TypeName("highEnthalpyMulticomponentThermo");
 
@@ -113,9 +106,16 @@ public:
             const word& phaseName=word::null
         );
 
+        //- The derived name
+        static word derivedThermoName()
+        {
+            return "highEnthalpyThermo";
+        };
 
     //- Destructor
     virtual ~highEnthalpyMulticomponentThermo();
+
+    
 };
 
 
@@ -156,7 +156,14 @@ public:
                 phaseName
             )
         {}
+
+        // void correct() override;
+
 };
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

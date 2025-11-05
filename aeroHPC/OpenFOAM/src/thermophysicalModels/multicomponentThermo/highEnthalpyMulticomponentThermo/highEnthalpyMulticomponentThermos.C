@@ -25,6 +25,7 @@ License
 
 #include "highEnthalpyMulticomponentThermo.H"
 
+
 #include "coefficientMulticomponentMixture.H"
 #include "coefficientWilkeMulticomponentMixture.H"
 #include "singleComponentMixture.H"
@@ -33,8 +34,8 @@ License
 
 #include "makeFluidMulticomponentThermo.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 namespace Foam
 {
     forCoeffGases
@@ -57,6 +58,8 @@ namespace Foam
         highEnthalpyMulticomponentThermo,
         singleComponentMixture
     );
+
+
 }
 
 // ************************************************************************* //

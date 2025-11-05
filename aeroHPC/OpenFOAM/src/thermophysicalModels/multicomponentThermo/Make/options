@@ -1,4 +1,5 @@
 EXE_INC = \
+    -I$(POLIMI_SRC)/thermophysicalModels/specie/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/multicomponentThermo/lnInclude \
     -I$(LIB_SRC)/physicalProperties/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/basic/lnInclude \
@@ -8,4 +9,5 @@ EXE_INC = \
 LIB_LIBS = \
     -lfluidThermophysicalModels \
     -lspecie \
-    -lfiniteVolume
+    -lfiniteVolume \
+    -lmulticomponentThermophysicalModels

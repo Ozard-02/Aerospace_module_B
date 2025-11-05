@@ -16,14 +16,15 @@ FoamFile
 
 thermoType
 {
-    type            highEnthalpyThermo; //hePsiThermo;
+    type            highEnthalpyThermo;  //hePsiThermo
     mixture         coefficientWilkeMulticomponentMixture;
-    transport       sutherland;
-    thermo          janaf;
+    transport       sutherland; // gupta
+    thermo          janaf;      //rrho
     energy          sensibleInternalEnergy;
     equationOfState perfectGas;
     specie          specie;
 }
+
 
 defaultSpecie N2;
 

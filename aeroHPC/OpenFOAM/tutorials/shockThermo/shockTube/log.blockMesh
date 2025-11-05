@@ -5,12 +5,12 @@
     \\  /    A nd           | Version:  13
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
-Build  : 13-5599db86c70d
+Build  : 13-283650f815b4
 Exec   : blockMesh
-Date   : Nov 04 2025
-Time   : 14:24:34
-Host   : "4a84eacb8991"
-PID    : 31400
+Date   : Nov 05 2025
+Time   : 10:33:47
+Host   : "c83f608f4b6a"
+PID    : 43902
 I/O    : uncollated
 Case   : /home/student/OpenFOAM/student-13/run/aeroHPC/OpenFOAM/tutorials/shockThermo/shockTube
 nProcs : 1
@@ -32,15 +32,13 @@ Creating topology patches
 
 Creating block mesh topology
 
-Check topology
+Basic statistics
+    Number of internal faces : 0
+    Number of boundary faces : 6
+    Number of defined boundary faces : 6
+    Number of undefined boundary faces : 0
 
-	Basic statistics
-		Number of internal faces : 0
-		Number of boundary faces : 6
-		Number of defined boundary faces : 6
-		Number of undefined boundary faces : 0
-	Checking patch -> block consistency
-
+Checking topology
 Creating block offsets
 Creating merge list .
 
