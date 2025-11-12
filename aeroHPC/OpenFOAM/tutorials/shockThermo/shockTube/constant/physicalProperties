@@ -19,7 +19,7 @@ thermoType
     type            highEnthalpyThermo;  //hePsiThermo
     mixture         coefficientWilkeMulticomponentMixture;
     transport       sutherland; // gupta
-    thermo          janaf;      //rrho
+    thermo          rrho;      //rrho //janaf
     energy          sensibleInternalEnergy;
     equationOfState perfectGas;
     specie          specie;
@@ -28,6 +28,6 @@ thermoType
 
 defaultSpecie N2;
 
-#include "speciesThermo.janaf"
+#include "speciesThermo.rrho"
 
 // ************************************************************************* //
