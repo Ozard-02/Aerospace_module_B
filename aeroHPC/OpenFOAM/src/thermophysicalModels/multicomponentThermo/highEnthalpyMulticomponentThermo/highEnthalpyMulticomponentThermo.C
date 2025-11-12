@@ -33,11 +33,6 @@ namespace Foam
     defineRunTimeSelectionTable(highEnthalpyMulticomponentThermo, fvMesh);
 }
 
-// const Foam::word Foam::highEnthalpyMulticomponentThermo::derivedThermoName
-// (
-//     "highEnthalpyMulticomponentThermo"
-// );
-
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
 Foam::autoPtr<Foam::highEnthalpyMulticomponentThermo> Foam::highEnthalpyMulticomponentThermo::New
@@ -57,8 +52,3 @@ Foam::highEnthalpyMulticomponentThermo::~highEnthalpyMulticomponentThermo()
 
 
 // ************************************************************************* //
-
-// void Foam::highEnthalpyMulticomponentThermo::composite::correct()
-// {
-//     Info << "in highEntalpy" << endl;
-// }
