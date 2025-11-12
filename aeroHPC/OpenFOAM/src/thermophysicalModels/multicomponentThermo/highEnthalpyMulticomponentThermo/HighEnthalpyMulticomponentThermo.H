@@ -7,6 +7,7 @@
 #include "basicThermo.H"
 #include "fvMesh.H"
 
+
 namespace Foam
 {
 
@@ -39,7 +40,6 @@ public:
         FluidMulticomponentThermo<Thermo>::correct();
 
         Info<< "implement your two-temperature model here" << endl;
-
     }
 };
 
