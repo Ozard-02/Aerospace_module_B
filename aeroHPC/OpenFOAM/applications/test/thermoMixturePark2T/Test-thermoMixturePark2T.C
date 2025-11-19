@@ -32,8 +32,10 @@ Description
 #include "IFstream.H"
 #include "specie.H"
 #include "perfectGas.H"
-#include "RRHOThermo.H"
 #include "rrhoThermo.H"
+#include "mutationpp.H"
+
+
 
 using namespace Foam;
 
@@ -48,11 +50,11 @@ int main(int argc, char *argv[])
 
     ThermoType t1
     (
-        "RRHOThermo",
+        "rrhoThermo",
         dict.subDict("air")
     );
 
-    const scalar cp = t1.Cpve(1e5, 300);
+    const scalar cp = t1.Cp(1e5, 300);
 
     Info<< "t1.Cp(300, 1e5) = " << cp
         << " [J/kmol/K]" 
