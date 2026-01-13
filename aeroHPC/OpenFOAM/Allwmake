@@ -5,8 +5,6 @@ thirdParty/Allwmake
 
 # Compile OpenFOAM libraries and applications
 src/Allwmake $targetType $*
-
 applications/Allwmake $targetType $*
-
 
 #------------------------------------------------------------------------------

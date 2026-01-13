@@ -1,0 +1,136 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+Build  : 13-a3c1ecb7bc45
+Exec   : foamRun
+Date   : Jan 13 2026
+Time   : 18:59:18
+Host   : "galaxyLinux"
+PID    : 98573
+I/O    : uncollated
+Case   : /home/espo/Uni/Aereospace_b/OpenFOAM/test/chemistry/air11
+nProcs : 1
+sigFpe : Enabling floating point exception trapping (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 10)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+--> FOAM Warning : 
+    From function Foam::functionObjectList::functionObjectList(const Foam::Time&, bool)
+    in file db/functionObjects/functionObjectList/functionObjectList.C at line 253
+    Both "system/functions" and "system/controlDict/functions" found, the latter will be ignored.
+--> FOAM Warning : 
+    From function void* Foam::dlOpen(const fileName&, bool)
+    in file POSIX.C at line 1247
+    dlopen error : libmutationMixture.so: cannot open shared object file: No such file or directory
+--> FOAM Warning : 
+    From function bool Foam::dlLibraryTable::open(const Foam::fileName&, bool)
+    in file db/dynamicLibrary/dlLibraryTable/dlLibraryTable.C at line 106
+    could not load "libmutationMixture.so"
+Create mesh for time = 0
+
+Selecting solver shockThermo
+Selecting thermodynamics package 
+{
+    type            highEnthalpyThermo;
+    mixture         multicomponentMixture;
+    transport       sutherland;
+    thermo          janaf;
+    energy          sensibleInternalEnergy;
+    equationOfState perfectGas;
+    specie          specie;
+}
+
+highEnthalpyMulticomponentThermo::composite - constructor
+Selecting turbulence model type laminar
+    Selecting laminar stress model Stokes
+Selecting thermophysical transport type laminar
+Selecting default laminar thermophysical transport model unityLewisFourier
+Courant Number mean: 0 max: 0
+Selecting combustion model laminar
+Selecting chemistry solver 
+{
+    solver          ode;
+    method          chemistryModel;
+}
+
+odeChemistryModel: Number of species = 5
+chemistryModel: Number of species = 5 and reactions = 3
+Selecting ODE solver seulex
+    using integrated reaction rate
+Selecting thermophysical transport type laminar
+Selecting default laminar thermophysical transport model unityLewisFourier
+
+PIMPLE: No convergence criteria found
+
+
+PIMPLE: Operating solver in transient mode with 1 outer corrector
+PIMPLE: Operating solver in PISO mode
+
+
+
+Starting time loop
+
+Courant Number mean: 0 max: 0
+Time = 0.001s
+
+implement your two-temperature model here
+ExecutionTime = 0.14423 s  ClockTime = 0 s
+
+Courant Number mean: 0 max: 0
+Time = 0.002s
+
+#0  Foam::error::printStack(Foam::Ostream&) at ??:?
+#1  Foam::sigFpe::sigHandler(int) at ??:?
+#2  ? in "/usr/lib/libc.so.6"
+#3  ? in "/usr/lib/libm.so.6"
+#4  pow in "/usr/lib/libm.so.6"
+#5  Foam::ReversibleReaction<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> >, Foam::thirdBodyArrheniusReactionRate>::kf(double, double, Foam::Field<double> const&, int) const at ??:?
+#6  Foam::Reaction<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > >::omega(double, double, Foam::Field<double> const&, int, double&, double&) const at ??:?
+#7  Foam::Reaction<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > >::dNdtByV(double, double, Foam::Field<double> const&, int, Foam::Field<double>&, bool, Foam::List<int> const&, int) const at ??:?
+#8  Foam::chemistryModel<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > >::derivatives(double, Foam::Field<double> const&, int, Foam::Field<double>&) const at ??:?
+#9  Foam::seulex::seul(double, Foam::Field<double> const&, int, double, int, Foam::Field<double>&, Foam::Field<double> const&) const at ??:?
+#10  Foam::seulex::solve(double&, Foam::Field<double>&, int, Foam::ODESolver::stepState&) const at ??:?
+#11  Foam::ODESolver::solve(double, double, Foam::Field<double>&, int, double&) const at ??:?
+#12  Foam::ode<Foam::chemistryModel<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > > >::solve(double&, double&, Foam::Field<double>&, int, double&, double&) const at ??:?
+#13  double Foam::chemistryModel<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > >::solve<Foam::UniformField<double> >(Foam::UniformField<double> const&) at ??:?
+#14  Foam::chemistryModel<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > >::solve(double) at ??:?
+#15  Foam::combustionModels::laminar::correct() at ??:?
+#16  Foam::solvers::shockThermo::thermophysicalPredictor() at ??:?
+#17  ? in "/home/espo/OpenFOAM/OpenFOAM-13/platforms/linux64GccDPInt32Opt/bin/foamRun"
+#18  ? in "/usr/lib/libc.so.6"
+#19  __libc_start_main in "/usr/lib/libc.so.6"
+#20  ? in "/home/espo/OpenFOAM/OpenFOAM-13/platforms/linux64GccDPInt32Opt/bin/foamRun"
+[galaxyLinux:98573:0:98573] Caught signal 8 (Floating point exception: tkill(2) or tgkill(2))
+==== backtrace (tid:  98573) ====
+ 0 0x000000000004dd71 ucs_rcache_distribution_get_num_bins()  ???:0
+ 1 0x000000000004e04a ucs_rcache_distribution_get_num_bins()  ???:0
+ 2 0x000000000003e4d0 __sigaction()  ???:0
+ 3 0x000000000009890c pthread_key_delete()  ???:0
+ 4 0x000000000003e3a0 gsignal()  ???:0
+ 5 0x000000000003e4d0 __sigaction()  ???:0
+ 6 0x0000000000075e59 __iscanonicall()  ???:0
+ 7 0x000000000005192d pow()  ???:0
+ 8 0x00000000007b683f Foam::ReversibleReaction<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> >, Foam::thirdBodyArrheniusReactionRate>::kf()  ???:0
+ 9 0x00000000005ad8de Foam::Reaction<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > >::omega()  ???:0
+10 0x00000000005ad9b9 Foam::Reaction<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > >::dNdtByV()  ???:0
+11 0x00000000005ae05f Foam::chemistryModel<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > >::derivatives()  ???:0
+12 0x00000000000276bc Foam::seulex::seul()  ???:0
+13 0x0000000000027ca8 Foam::seulex::solve()  ???:0
+14 0x0000000000010d37 Foam::ODESolver::solve()  ???:0
+15 0x00000000006667cf Foam::ode<Foam::chemistryModel<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > > >::solve()  ???:0
+16 0x0000000000632641 Foam::chemistryModel<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > >::solve<Foam::UniformField<double> >()  ???:0
+17 0x0000000000632fa2 Foam::chemistryModel<Foam::sutherlandTransport<Foam::species::thermo<Foam::janafThermo<Foam::perfectGas<Foam::specie> >, Foam::sensibleInternalEnergy> > >::solve()  ???:0
+18 0x00000000000b51a9 Foam::combustionModels::laminar::correct()  ???:0
+19 0x0000000000031759 Foam::solvers::shockThermo::thermophysicalPredictor()  ???:0
+20 0x0000000000003d34 main()  ???:0
+21 0x0000000000027635 __libc_init_first()  ???:0
+22 0x00000000000276e9 __libc_start_main()  ???:0
+23 0x0000000000004315 _start()  ???:0
+=================================

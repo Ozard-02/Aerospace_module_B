@@ -7,41 +7,44 @@
 #include "basicThermo.H"
 #include "fvMesh.H"
 
+// Temporarily undefine OpenFOAM's log macro to avoid collision with Mutation++'s Log class
+#ifdef Log
+#undef Log
+#endif
+#ifdef log
+#undef log
+#endif
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
+#include "mutationMixture.H"
 
 namespace Foam
 {
 
-/*---------------------------------------------------------------------------*\
-            Class HighEnthalpyMulticomponentThermo Declaration
-\*---------------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------------*\
+                Class HighEnthalpyMulticomponentThermo Declaration
+    \*---------------------------------------------------------------------------*/
 
-template<class Thermo>
-class HighEnthalpyMulticomponentThermo
-:
-    public FluidMulticomponentThermo<Thermo>
-{
-public:
-
-    // Constructors
-    HighEnthalpyMulticomponentThermo
-    (
-        const fvMesh& mesh,
-        const word& phaseName = word::null
-    )
-    :
-        FluidMulticomponentThermo<Thermo>(mesh, phaseName)   
-    {}
-
-    virtual ~HighEnthalpyMulticomponentThermo() = default;
-
-    // Member Functions
-    virtual void correct() override
+    template <class Thermo>
+    class HighEnthalpyMulticomponentThermo
+        : public FluidMulticomponentThermo<Thermo>
     {
-        FluidMulticomponentThermo<Thermo>::correct();
+    public:
+        // Constructors
+        HighEnthalpyMulticomponentThermo(
+            const fvMesh &mesh,
+            const word &phaseName = word::null)
+            : FluidMulticomponentThermo<Thermo>(mesh, phaseName)
+        {
+        }
 
-        Info<< "implement your two-temperature model here" << endl;
-    }
-};
+        virtual ~HighEnthalpyMulticomponentThermo() = default;
+    };
 
 } // End namespace Foam
 

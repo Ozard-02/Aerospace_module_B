@@ -1,85 +1,124 @@
-/*---------------------------------------------------------------------------*\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2012-2023 OpenFOAM Foundation
-     \\/     M anipulation  |
--------------------------------------------------------------------------------
-License
-    This file is part of OpenFOAM.
+#include "mutationMixture.H"
 
-    OpenFOAM is free software: you can redistribute it and/or modify it
-    under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
-    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
-    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-    for more details.
+// ---------- Constants ----------
+static constexpr double Ru = 8.31446261815324; // J/mol/K
+static constexpr double ATM = 101325.0;        // Pa
 
-    You should have received a copy of the GNU General Public License
-    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
-
-Application
-    ThermoMixture
-
-Description
-    Example of coupling between OpenFOAM-13 and mutationPP
-
-    Federico Piscaglia
-    Dept. of Aerospace Science and Technology
-    Politecnico di Milano
-
-\*---------------------------------------------------------------------------*/
-
-#include "mutation++.h"
-#include <Eigen/Dense>
-
-#include "fv.H"
-#include "dictionary.H"
-#include "IFstream.H"
-
-
-using namespace Foam;
-
-using namespace Mutation;
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-
-void test1()
+int main()
 {
-    // Generate the default options for the air11 mixture
-    MixtureOptions opts("air_11");
-    opts.setStateModel("EquilTP");
+    try
+    {
+        // ------------------------------------------------------------
+        // Create wrapper (no direct Mutation::Mixture in this file)
+        // ------------------------------------------------------------
+        mutationMixture mix("air_5");
 
-    // Rigid-rotor harmonic oscillator (RRHO) two-temperature model
-    opts.setThermodynamicDatabase("RRHO");
+        const int ns = mix.nSpecies();
+        if (ns <= 0)
+            throw std::runtime_error("Mixture has no species.");
 
-    // Load the mixture with the new options
-    Mixture mix(opts);
-    int ns = mix.nSpecies();
+        // ------------------------------------------------------------
+        // Build species name list (for file header)
+        // ------------------------------------------------------------
+        std::vector<std::string> spNames(ns);
+        for (int s = 0; s < ns; ++s)
+            spNames[s] = mix.speciesName(s);
 
-    Eigen::MatrixXd m_Dij(ns, ns);
-    Eigen::MatrixXd m_ram_Dij(ns, ns);
-    Eigen::VectorXd v_Vd_ram(ns);
-    Eigen::VectorXd v_Vd_sm(ns);
-    Eigen::VectorXd v_Vd(ns);
-    Eigen::VectorXd v_b(ns);
-    Eigen::VectorXd v_rhoi(ns);
+        // ------------------------------------------------------------
+        // Composition (air)
+        // ------------------------------------------------------------
+        std::vector<double> Y(ns, 0.0);
 
+        const int iN2 = mix.speciesIndex("N2");
+        const int iO2 = mix.speciesIndex("O2");
+
+        if (iN2 < 0 || iO2 < 0)
+            throw std::runtime_error("N2 and/or O2 not found in air_5.");
+
+        Y[iN2] = 0.79;
+        Y[iO2] = 0.21;
+
+        // ------------------------------------------------------------
+        // Compute mixture gas constant Rmix = sum(Ys * Ru/Ms)
+        // ------------------------------------------------------------
+        double Rmix = 0.0;
+        for (int s = 0; s < ns; ++s)
+        {
+            if (Y[s] <= 0.0)
+                continue;
+            const double Mw = mix.speciesMw(s); // kg/mol
+            if (Mw <= 0.0)
+                continue;
+            Rmix += Y[s] * Ru / Mw; // J/kg/K
+        }
+
+        if (Rmix <= 0.0)
+            throw std::runtime_error("Invalid Rmix (check Y and molecular weights).");
+
+        // ------------------------------------------------------------
+        // Initial conditions (paper heat-bath style)
+        // ------------------------------------------------------------
+        double Ttr = 12000.0;
+        double Tv = 2000.0;
+
+        const double p0 = ATM;
+        const double rho = p0 / (Rmix * Ttr); // constant-volume test
+
+        // Initial energies (translation-only model used by your wrapper)
+        double Et = rho * (1.5 * Rmix * Ttr);
+        double Ev = 0.0; // OK: wrapper will move energy into Ev via Qve
+
+        // ------------------------------------------------------------
+        // Time loop
+        // ------------------------------------------------------------
+        const double dt = 1.0e-8;
+        const int nSteps = 4000;
+        double t = 0.0;
+
+        std::ofstream out("twoT_energy_based.dat");
+        if (!out)
+            throw std::runtime_error("Cannot open output file twoT_energy_based.dat");
+
+        // Header
+        out << "# t[s] Ttr[K] Tv[K] Et[J/m3] Ev[J/m3] p[Pa]";
+        for (int s = 0; s < ns; ++s)
+            out << " rho_" << spNames[s];
+        out << "\n";
+
+        for (int n = 0; n < nSteps; ++n)
+        {
+            // One relaxation step (updates Et/Ev and returns updated Ttr/Tv)
+            mix.step(dt, rho, Y, Et, Ev, Ttr, Tv);
+
+            // Pressure (ideal gas, based on translational temperature)
+            const double p = rho * Rmix * Ttr;
+
+            // Write line
+            out << t << " " << Ttr << " " << Tv << " " << Et << " " << Ev << " " << p;
+
+            // Species densities (constant here unless you later evolve Y)
+            for (int s = 0; s < ns; ++s)
+                out << " " << (rho * Y[s]);
+
+            out << "\n";
+
+            t += dt;
+        }
+
+        out.close();
+        std::cout << "Wrote: twoT_energy_based.dat\n";
+        return 0;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "ERROR: " << e.what() << "\n";
+        return 1;
+    }
 }
-
-
-//- ------------------------------------------------------------------------
-// Main program:
-
-int main(int argc, char *argv[])
-{
-    test1();
-
-    return 0;
-}
-
-// ************************************************************************* //

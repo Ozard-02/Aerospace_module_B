@@ -1,0 +1,108 @@
+#ifndef mutationMixture_H
+#define mutationMixture_H
+
+// Undefine OpenFOAM's log macro before including Mutation++ headers
+// to avoid collision with Mutation++'s Log class
+#ifdef log
+#define FOAM_LOG_WAS_DEFINED
+#undef log
+#endif
+
+#include <mutation++.h>
+
+// Restore OpenFOAM's log macro if it was defined
+#ifdef FOAM_LOG_WAS_DEFINED
+#define log        \
+    if (Foam::log) \
+    Foam::Info
+#undef FOAM_LOG_WAS_DEFINED
+#endif
+
+#include <vector>
+#include <string>
+
+// ------------------------------------------------------------
+// Paper vibrational data container
+// ------------------------------------------------------------
+struct VibData
+{
+    int speciesIndex; // index in Mutation++ mixture
+    double M;         // kg/mol
+    double theta_v;   // K
+};
+
+// ------------------------------------------------------------
+// mutationMixture: single-step 2T energy relaxation operator
+// ------------------------------------------------------------
+class mutationMixture
+{
+public:
+    // Constructor
+    explicit mutationMixture(const std::string &mechanism);
+
+    // Perform ONE time step
+    void step(
+        double dt,
+        double rho,
+        const std::vector<double> &Y,
+        double &Et,
+        double &Ev,
+        double &Ttr,
+        double &Tv);
+
+    // ---- pass-through accessors ----
+    int nSpecies() const
+    {
+        return mix_.nSpecies();
+    }
+
+    int speciesIndex(const std::string &name) const
+    {
+        return mix_.speciesIndex(name);
+    }
+
+    std::string speciesName(int i) const
+    {
+        return mix_.speciesName(i);
+    }
+
+    double speciesMw(int i) const
+    {
+        return mix_.speciesMw(i);
+    }
+
+    double EvFromTv(double Tv, double rho, const std::vector<double> &Y) const;
+
+    // Invert Ev -> Tv (Newton method, paper definition)
+    double invertTv(
+        double Ev_target,
+        double rho,
+        const std::vector<double> &Y,
+        double Tv_init) const;
+
+    double invertTtr(
+        double Et_target, // J/m^3 (translational/heavy energy density)
+        double rho,
+        const std::vector<double> &Y,
+        double Tv, // keep Tv fixed during this inversion
+        double Ttr_init);
+
+    double EtFromState_(
+        double Ttr,
+        double Tv,
+        double rho,
+        const std::vector<double> &Y);
+
+private:
+    // Mutation++ mixture
+    Mutation::Mixture mix_;
+
+    // Working buffers
+    std::vector<double> rho_i_;
+    std::vector<double> Tstate_;
+
+    // Paper vibrational species data
+    std::vector<VibData> vibData_;
+};
+
+#endif

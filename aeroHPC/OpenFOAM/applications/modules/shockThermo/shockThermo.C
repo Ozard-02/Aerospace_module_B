@@ -35,51 +35,46 @@ License
 
 #include "psiThermo.H"
 
+#include "fvmLaplacian.H"
+
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace solvers
-{
-    defineTypeNameAndDebug(shockThermo, 0);
-    addToRunTimeSelectionTable(solver, shockThermo, fvMesh);
+    namespace solvers
+    {
+        defineTypeNameAndDebug(shockThermo, 0);
+        addToRunTimeSelectionTable(solver, shockThermo, fvMesh);
+    }
 }
-}
-
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
 
 // * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::solvers::shockThermo::shockThermo(fvMesh& mesh)
-:
+Foam::solvers::shockThermo::shockThermo(fvMesh &mesh)
+    : shockFluid(mesh, fluidThermo::New(mesh)),
+      thermo_(refCast<fluidMulticomponentThermo>(shockFluid::thermo_)),
 
-shockFluid
-(
-    mesh,
-    autoPtr<fluidThermo>(fluidMulticomponentThermo::New(mesh).ptr())
-),
+      Y_(thermo_.Y()),
 
-thermo_(refCast<fluidMulticomponentThermo>(shockFluid::thermo_)),
+      reaction(combustionModel::New(thermo_, momentumTransport())),
 
-Y_(thermo_.Y()),
+      thermophysicalTransport(
+          fluidMulticomponentThermophysicalTransportModel::New(
+              momentumTransport(),
+              thermo_)),
+      thermo(thermo_),
+      Y(Y_)
 
-reaction(combustionModel::New(thermo_, momentumTransport())),
-
-thermophysicalTransport
-(
-    fluidMulticomponentThermophysicalTransportModel::New
-    (
-        momentumTransport(),
-        thermo_
-    )
-),
-thermo(thermo_),
-Y(Y_)
 {
+    // Safe OpenFOAM-style runtime cast
+    heThermoPtr_ =
+        isA<highEnthalpyMulticomponentThermo>(thermo_)
+            ? &refCast<highEnthalpyMulticomponentThermo>(thermo_)
+            : nullptr;
     thermo.validate(type(), "h", "e");
 
     forAll(Y, i)
@@ -89,12 +84,11 @@ Y(Y_)
     fields.add(thermo.he());
 }
 
-
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::solvers::shockThermo::~shockThermo()
-{}
-
+{
+}
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
@@ -104,10 +98,8 @@ void Foam::solvers::shockThermo::preSolve()
     refCast<fluidMulticomponentThermo>(shockFluid::thermo_);
 
     {
-        const surfaceScalarField amaxSf
-        (
-            max(mag(aphiv_pos()), mag(aphiv_neg()))
-        );
+        const surfaceScalarField amaxSf(
+            max(mag(aphiv_pos()), mag(aphiv_neg())));
 
         if (transient())
         {
@@ -132,8 +124,5 @@ void Foam::solvers::shockThermo::preSolve()
     // Update the mesh for topology change, mesh to mesh mapping
     mesh_.update();
 }
-
-
-
 
 // ************************************************************************* //

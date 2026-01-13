@@ -14,7 +14,11 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     chemFoam;
+// 1. Use the generic solver runner
+application     foamRun;
+
+// 2. Tell foamRun which solver logic to use (defined in your library)
+solver          shockThermo;
 
 startFrom       startTime;
 
@@ -22,19 +26,19 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         0.001;
+endTime         7e-03;
 
-deltaT          1e-05;
+deltaT          1e-03;
 
 maxDeltaT       1;
 
-adjustTimeStep  on;
+adjustTimeStep  off;
 
-writeControl    adjustableRunTime;
+writeControl    timeStep;
 //writeControl	timeStep;
 //writeInterval	1;
 
-writeInterval   1e-04;
+writeInterval   1;
 
 purgeWrite      0;
 
@@ -48,7 +52,39 @@ timePrecision   6;
 
 runTimeModifiable yes;
 
-libs ("/academia/TESI/templateTesista/OpenFOAM/test/chemistry/air11/dynamicCode/platforms/linux64GccDPInt32Opt/lib/libode_Park2T_guptaYos_janaf_perfectGas_specie___sensibleEnthalpy____3b52744371583f756d48d24ed39f687aa9a77ef3.so" "libguptaDAER.so" "libfede.so" "/academia/TESI/templateTesista/OpenFOAM/test/chemistry/air11/dynamicCode/platforms/linux64GccDPInt32Opt/lib/libode_Park2T_guptaYos_janaf_perfectGas_specie___sensibleEnthalpy____3b52744371583f756d48d24ed39f687aa9a77ef3.so");
+
+functions
+{
+    probes1
+    {
+        type            probes;
+        libs            ( "libsampling.so" );
+        writeControl    timeStep;
+        writeInterval   1;
+
+        fields          ( T Tve Et Ev p e );
+
+        // choose probe point(s) inside the mesh (edit coordinates!)
+        probeLocations
+        (
+            (0 0 0)
+        );
+    }
+}
+
+
+libs
+(
+    // Standard Thermo (Safety)
+    "libfluidThermophysicalModels.so"
+     "libmutationMixture.so"
+    "libhighEnthalpyThermophysicalModels.so"
+"libcombustionModels.so"
+    // Your Solver
+    "libshockThermo.so"
+);
+
+
 DebugSwitches
 {
     SolverPerformance   0;

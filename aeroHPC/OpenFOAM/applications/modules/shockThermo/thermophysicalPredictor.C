@@ -27,41 +27,35 @@ License
 #include "fvmDdt.H"
 #include "fvcDiv.H"
 #include "fvcDdt.H"
+#include <cmath>
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 void Foam::solvers::shockThermo::thermophysicalPredictor()
 {
 
+    Info << "    Solving thermophysical equations" << endl;
+    Info << "Combustion model type = " << reaction->type() << nl << endl;
+
     // add support to multi-specie chemistry
-    tmp<fv::convectionScheme<scalar>> mvConvection
-    (
-        fv::convectionScheme<scalar>::New
-        (
+    tmp<fv::convectionScheme<scalar>> mvConvection(
+        fv::convectionScheme<scalar>::New(
             mesh,
             fields,
             phi,
-            mesh.schemes().div("div(phi,Yi_h)")
-        )
-    );
+            mesh.schemes().div("div(phi,Yi_h)")));
 
     reaction->correct();
 
     forAll(Y, i)
     {
-        volScalarField& Yi = Y_[i];
+        volScalarField &Yi = Y_[i];
 
         if (thermo_.solveSpecie(i))
         {
-            fvScalarMatrix YiEqn
-            (
-                fvm::ddt(rho, Yi)
-              + mvConvection->fvmDiv(phi, Yi)
-              + thermophysicalTransport->divj(Yi)
-             ==
-                reaction->R(Yi)
-              + fvModels().source(rho, Yi)
-            );
+            fvScalarMatrix YiEqn(
+                fvm::ddt(rho, Yi) + mvConvection->fvmDiv(phi, Yi) + thermophysicalTransport->divj(Yi) ==
+                reaction->R(Yi) + fvModels().source(rho, Yi));
 
             YiEqn.relax();
 
@@ -86,7 +80,6 @@ void Foam::solvers::shockThermo::thermophysicalPredictor()
             << exit(FatalError);
     }
 
-
     //- ------------------------------------------------------------------------
 
     // solve the equation of energy.
@@ -96,44 +89,33 @@ void Foam::solvers::shockThermo::thermophysicalPredictor()
     // between thermo classes. The thermo.correct() function must be the one
     // defined in the derived class; shockFluid::thermophysicalPredictor() is
     // pasted here below.
-    
-    volScalarField& e = thermo_.he();
+
+    volScalarField &e = thermo_.he();
 
     const surfaceScalarField e_pos(interpolate(e, pos, thermo.T().name()));
     const surfaceScalarField e_neg(interpolate(e, neg, thermo.T().name()));
 
-    surfaceScalarField phiEp
-    (
+    surfaceScalarField phiEp(
         "phiEp",
-        aphiv_pos()*(rho_pos()*(e_pos + 0.5*magSqr(U_pos())) + p_pos())
-      + aphiv_neg()*(rho_neg()*(e_neg + 0.5*magSqr(U_neg())) + p_neg())
-      + aSf()*(p_pos() - p_neg())
-    );
+        aphiv_pos() * (rho_pos() * (e_pos + 0.5 * magSqr(U_pos())) + p_pos()) + aphiv_neg() * (rho_neg() * (e_neg + 0.5 * magSqr(U_neg())) + p_neg()) + aSf() * (p_pos() - p_neg()));
 
     // Make flux for pressure-work absolute
     if (mesh.moving())
     {
-        phiEp += mesh.phi()*(a_pos()*p_pos() + a_neg()*p_neg());
+        phiEp += mesh.phi() * (a_pos() * p_pos() + a_neg() * p_neg());
     }
 
-
     //- for high enthalpy flows, e = e_rt + e_ve.
-    
-    fvScalarMatrix EEqn
-    (
-        fvm::ddt(rho, e) + fvc::div(phiEp)
-      + fvc::ddt(rho, K)
-     ==
-        fvModels().source(rho, e)
-    );
+
+    fvScalarMatrix EEqn(
+        fvm::ddt(rho, e) + fvc::div(phiEp) + fvc::ddt(rho, K) ==
+        reaction->Qdot() + fvModels().source(rho, e));
 
     if (!inviscid)
     {
-        const surfaceScalarField devTauDotU
-        (
+        const surfaceScalarField devTauDotU(
             "devTauDotU",
-            devTau() & (a_pos()*U_pos() + a_neg()*U_neg())
-        );
+            devTau() & (a_pos() * U_pos() + a_neg() * U_neg()));
 
         EEqn += thermophysicalTransport->divq(e) + fvc::div(devTauDotU);
     }
@@ -146,9 +128,16 @@ void Foam::solvers::shockThermo::thermophysicalPredictor()
 
     fvConstraints().constrain(e);
 
-    thermo_.correct();
-
+    if (heThermoPtr_)
+    {
+        Info << "    Correcting high enthalpy thermodynamics" << endl;
+        heThermoPtr_->correct_he();
+    }
+    else
+    {
+        Info << "    Correcting thermodynamics" << endl;
+        thermo_.correct();
+    }
 }
-
 
 // ************************************************************************* //
