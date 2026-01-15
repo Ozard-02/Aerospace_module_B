@@ -4,7 +4,14 @@
 \usepackage{amsmath}
 
 \title{OpenFOAM implementation of multi-temperature thermochemical non-equilibrium models for high-enthalpy air}
-\author{Marco Allanda, Daniele Bergamaschi, Lorenzo Esposito, Francesco Faggion, Francesco Grassi, Giorgio Venezia, Francesco Virgulti}
+\author{
+\begin{tabular}{cc}
+Marco Allanda & Daniele Bergamaschi \\
+Lorenzo Esposito & Francesco Faggion \\
+Francesco Grassi & Giorgio Venezia \\
+\multicolumn{2}{c}{Francesco Virgulti}
+\end{tabular}
+}
 \date{January 2026}
 
 \begin{document}
@@ -580,7 +587,18 @@ so that we keep the temporal resolution consistent with the single-cell test cas
     \caption{Speedup analysis for multi-cell configuration}
     \label{fig:speedup_analysis}
 \end{figure}
-
+Figure~\ref{fig:speedup_analysis} illustrates the time taken to complete the simulation
+as a function of the number of MPI processes used. The results demonstrate a significant
+speedup as the number of processes increases, until we reach a plateau around 4 processes,
+thus with 8 processes the time taken is almost the same as with 4 processes.
+This behavior is expected due to the overhead associated with MPI communication
+and the limited workload per process as the number of processes increases.
+The simulation has been run on a native linux machine with heterogeneous core architecture,
+in particular with 4 performance cores and 8 efficiency cores, thus the last run has been compromised
+by this hardware limitation.
+Nevertheless, the results confirm that the implemented two-temperature model scales well
+with the number of MPI processes, making it suitable for larger-scale simulations
+involving multiple cells. 
 
 \bibliographystyle{unsrt}
 \bibliography{references}

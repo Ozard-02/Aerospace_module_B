@@ -54,13 +54,13 @@ def main():
     ax1.grid(True, alpha=0.3)
 
     plt.tight_layout()
+    plt.show()
 
 
     # Salvataggio in PNG
     output_name = "speedup_plot.png"
     plt.savefig(output_name, dpi=300)
     print(f"Grafico salvato correttamente come: {output_name}")
-    plt.show()
 
 if __name__ == "__main__":
     main()
