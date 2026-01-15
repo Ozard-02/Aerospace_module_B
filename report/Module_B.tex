@@ -1,0 +1,592 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{mathptmx}
+\usepackage{amsmath}
+
+\title{OpenFOAM implementation of multi-temperature thermochemical non-equilibrium models for high-enthalpy air}
+\author{Marco Allanda, Daniele Bergamaschi, Lorenzo Esposito, Francesco Faggion, Francesco Grassi, Giorgio Venezia, Francesco Virgulti}
+\date{January 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+OpenFOAM is an open-source software widely used for computational fluid dynamics (CFD) simulations. Owing to its significant impact in both academia and industry, a deep understanding of its structure and functionalities is essential. Beyond simply using existing solvers and test cases, it is equally important to be able to adapt and extend the code to address different physical models and application scenarios.
+
+The objective of this project is to simulate a two-temperature open-source CFD model for hypersonic reacting flows (e.g., air). This work is based on the reference paper \cite{CasseauTwoTemperatureCFD}, which serves as the theoretical and methodological foundation for the model implementation.
+
+The report is structured as follows:
+\begin{itemize}
+    \item analysis of the underlying physical model in the one-temperature formulation,
+    \item development of the two-temperature model,
+    \item implementation of the model within the OpenFOAM framework.
+\end{itemize}
+
+\section{Navier--Stokes Equations}
+
+The motion of a Newtonian fluid is governed by the conservation of mass, momentum, and energy. \cite{versteeg2007cfd}
+
+\subsection{Continuity Equation (Mass Conservation)}
+
+\begin{equation}
+\frac{\partial \rho}{\partial t}
++
+\nabla \cdot (\rho \mathbf{u})
+=
+0
+\label{eq:continuity}
+\end{equation}
+
+\subsection{Momentum Equation}
+
+\begin{equation}
+\frac{\partial (\rho \mathbf{u})}{\partial t}
++
+\nabla \cdot (\rho \mathbf{u} \otimes \mathbf{u})
+=
+-\nabla p
++
+\nabla \cdot \boldsymbol{\tau}
++
+\rho \mathbf{f}
+\label{eq:momentum}
+\end{equation}
+
+where the viscous stress tensor for a Newtonian fluid is given by
+
+\begin{equation}
+\boldsymbol{\tau}
+=
+\mu
+\left(
+\nabla \mathbf{u}
++
+(\nabla \mathbf{u})^{T}
+\right)
+-
+\frac{2}{3}\mu (\nabla \cdot \mathbf{u}) \mathbf{I}
+\end{equation}
+
+\subsection{Energy Equation}
+
+The conservation of total energy for a compressible Newtonian fluid can be written as
+
+\begin{equation}
+\frac{\partial (\rho E)}{\partial t}
++
+\nabla \cdot \left[ \mathbf{u}(\rho E + p) \right]
+=
+\nabla \cdot (k \nabla T)
++
+\nabla \cdot (\boldsymbol{\tau} \cdot \mathbf{u})
++
+\rho \mathbf{f} \cdot \mathbf{u},
+\label{eq:energy}
+\end{equation}
+
+where the total energy per unit mass is defined as
+
+\begin{equation}
+E = e + \frac{1}{2}|\mathbf{u}|^{2},
+\label{eq:E}
+\end{equation}
+
+with \(e\) denoting the specific internal energy.
+
+\medskip
+
+For many engineering applications, it is convenient to express the energy equation
+in terms of temperature or enthalpy rather than total energy.
+Introducing the specific heat at constant pressure \(c_p\),
+defined as
+
+\begin{equation}
+c_p = \left(\frac{\partial h}{\partial T}\right)_p,
+\end{equation}
+
+where \(h = e + p/\rho\) is the specific enthalpy,
+the energy equation can be reformulated, under the assumption of a calorically
+perfect fluid, as
+
+\begin{equation}
+\rho c_p
+\left(
+\frac{\partial T}{\partial t}
++
+\mathbf{u} \cdot \nabla T
+\right)
+=
+\nabla \cdot (k \nabla T)
++
+\Phi
+-
+\frac{Dp}{Dt}.
+\end{equation}
+
+Here, \(T\) is the temperature, \(k\) is the thermal conductivity,
+\(\Phi = \boldsymbol{\tau} : \nabla \mathbf{u}\) represents the viscous
+dissipation term, and \(D/Dt\) denotes the material derivative.
+
+\medskip
+
+The specific heat at constant pressure \(c_p\) represents the amount of energy
+required to increase the temperature of a unit mass of fluid by one degree while
+maintaining constant pressure. Its appearance in the temperature-based energy
+equation reflects the fact that, in a flowing fluid, thermal energy variations
+are naturally described in terms of enthalpy rather than internal energy alone.
+For incompressible flows with constant properties, the pressure-work term
+\(-Dp/Dt\) vanishes, and the energy equation reduces to a pure convection–diffusion
+equation for the temperature field.
+\subsection{Equation of State}
+
+To close the system, an equation of state is required, for example for an ideal gas:
+
+\begin{equation}
+p = \rho R T
+\end{equation}
+
+
+\subsection{Multi-Species Flow Formulation}
+
+When moving from a single-component fluid to a multi-species mixture (for example, air
+described by eleven chemical species), the underlying physical principles remain unchanged.
+The conservation of mass, momentum, and energy is still governed by the same equations
+introduced in the previous sections. However, the presence of multiple chemical species
+introduces additional transport equations and increases the level of coupling between
+thermodynamic and flow variables.
+
+\medskip
+
+\paragraph{Physical interpretation}
+
+Even in a multi-species mixture, the flow is characterized by a single macroscopic velocity
+field \(\mathbf{u}\) and a single pressure field \(p\). The mixture behaves as a single
+continuum from a mechanical point of view. The complexity arises from the fact that the
+mixture is composed of several chemical species, indexed by \(i = 1, 2, \ldots, 11\), each
+characterized by its mass fraction \(Y_i\), molecular weight \(M_i\), and diffusive motion
+relative to the mixture-averaged velocity.
+
+\medskip
+
+\paragraph{Governing equations}
+
+The conservation equations for total mass, momentum, and energy retain exactly the same
+form as in the single-species case and apply to the mixture as a whole. Momentum conservation
+is therefore not written for each individual species, but for the mixture treated as a
+single fluid.
+
+In contrast to the single-species formulation, the thermodynamic and transport properties
+appearing in these equations (such as density, specific heat, and viscosity) generally
+depend on both temperature and mixture composition.
+
+\medskip
+
+\paragraph{Species transport equations}
+
+The main extension introduced by a multi-species formulation is the inclusion of additional
+transport equations, one for each chemical species. For species \(i\), the transport
+equation describes the evolution of its mass fraction \(Y_i\) and accounts for convection
+with the bulk flow, molecular diffusion, and chemical reactions:
+
+\begin{equation}
+\frac{\partial (\rho Y_i)}{\partial t}
++
+\nabla \cdot (\rho \mathbf{u} Y_i)
+=
+-\nabla \cdot \mathbf{J}_i
++
+\dot{\omega}_i.
+\label{eq:specie_eq}
+\end{equation}
+
+Here, \(\mathbf{J}_i\) denotes the diffusive flux of species \(i\) relative to the mixture,
+while \(\dot{\omega}_i\) represents the chemical source term associated with production or
+consumption due to chemical reactions.
+
+For a system composed of eleven species, eleven such equations are introduced. However, the
+species mass fractions are constrained by
+
+\begin{equation}
+\sum_{i=1}^{11} Y_i = 1,
+\end{equation}
+
+which implies that only ten of the species equations are independent. The remaining mass
+fraction can be obtained from this constraint.
+
+\medskip
+
+\paragraph{Role of the energy equation}
+
+In multi-species flows, the energy equation generally plays a central role even at low Mach
+number. This is due to the explicit dependence of thermodynamic properties on both temperature
+and composition, for example
+
+\[
+c_p = c_p(T, Y_i).
+\]
+
+In addition, energy is transported not only by convection and conduction, but also by
+species diffusion, and chemical reactions may release or absorb heat. As a result, the
+governing variables become strongly coupled, which can be summarized schematically as
+
+\[
+Y_i \;\leftrightarrow\; T \;\leftrightarrow\; \rho \;\leftrightarrow\; p \;\leftrightarrow\; \mathbf{u}.
+\]
+
+This coupling highlights the essential role of species transport and energy conservation in
+determining the overall behavior of multi-species flows.
+\section{Two-temperature reacting mixture}
+
+In a two-temperature reacting mixture \cite{CasseauTwoTemperatureCFD}, the
+continuity equation \eqref{eq:continuity}, the momentum equation \eqref{eq:momentum},
+and the species transport equations \eqref{eq:specie_eq} retain the same form as in
+the single-temperature formulation. The main modification concerns the definition
+of the internal energy \(e\) appearing in the total energy equation \eqref{eq:energy}.
+
+\subsection{Internal energy decomposition}
+
+Instead of a single-temperature caloric relation \(e=e(T,Y)\), the internal energy
+is decomposed into contributions associated with different molecular energy modes:
+\begin{equation}
+e(T,T_v,Y)
+=
+e_{tr}(T,Y)
++
+e_{rot}(T,Y)
++
+e_{vib}(T_v,Y)
++
+e_{elec}(T_v,Y).
+\end{equation}
+
+In this work we group the translational and rotational modes into a single
+translational--rotational energy \(e_t\), and the vibrational and electronic modes
+into a vibrational--electronic energy \(e_v\):
+\begin{equation}
+e_t(T,Y) = e_{tr}(T,Y) + e_{rot}(T,Y),
+\end{equation}
+\begin{equation}
+e_v(T_v,Y) = e_{vib}(T_v,Y) + e_{elec}(T_v,Y),
+\end{equation}
+so that
+\begin{equation}
+e = e_t + e_v.
+\label{eq:new_e}
+\end{equation}
+
+\subsection{Canonical two-temperature energy equations}
+
+A common two-temperature closure consists of solving a conservative
+total energy equation together with an additional balance for the
+vibrational--electronic energy. The total energy equation reads
+\begin{equation}
+\frac{\partial (\rho E)}{\partial t}
++
+\nabla \cdot \bigl( \mathbf{u} (\rho E + p) \bigr)
+=
+\nabla \cdot (\boldsymbol{\tau} \cdot \mathbf{u})
+-
+\nabla \cdot \mathbf{q}
++
+\rho \mathbf{f} \cdot \mathbf{u},
+\label{eq:total_energy_twoT}
+\end{equation}
+with
+\begin{equation}
+E = e + \frac{1}{2}\lvert \mathbf{u} \rvert^{2}.
+\label{eq:E_def}
+\end{equation}
+
+In addition, a separate balance is introduced for the vibrational--electronic
+energy,
+\begin{equation}
+\frac{\partial (\rho e_v)}{\partial t}
++
+\nabla \cdot (\rho \mathbf{u} e_v)
+=
+-
+\nabla \cdot \mathbf{q}_v
++
+Q_{tr \leftrightarrow v}
++
+Q_{chem \to v}.
+\label{eq:vibrational_energy}
+\end{equation}
+
+\subsection{Simplification of the system for a single-cell test}
+
+To reproduce the zero-dimensional test case considered in
+\cite{CasseauTwoTemperatureCFD}, we simplify the governing equations as follows.
+The computational domain consists of a single cell, therefore spatial transport
+terms (fluxes) are neglected. Moreover, the velocity is initially set to zero,
+\(\mathbf{u}=\mathbf{0}\). Under these assumptions,
+\begin{itemize}
+    \item the total energy reduces to the internal energy,
+    \begin{equation}
+    E = e,
+    \end{equation}
+    since \(\mathbf{u}=\mathbf{0}\) implies \(\tfrac{1}{2}\lvert\mathbf{u}\rvert^2=0\);
+    \item the vibrational--electronic energy equation \eqref{eq:vibrational_energy}
+    reduces to a purely local evolution equation (ODE),
+    \begin{equation}
+    \frac{d e_v}{d t}
+    =
+    Q_{tr \leftrightarrow v}
+    +
+    Q_{chem \to v},
+    \label{eq:ev_ode}
+    \end{equation}
+    i.e.\ only relaxation and chemistry coupling terms are retained, with no
+    convection or diffusion of \(e_v\).
+\end{itemize}
+
+\subsection{Species}
+In the present work, air is modeled as a reacting mixture composed of five
+chemical species (air\_5). Consequently, five species mass fractions \(Y_i\),
+\(i=1,\dots,5\), are considered, subject to the constraint
+\begin{equation}
+\sum_{i=1}^{5} Y_i = 1.
+\end{equation}
+
+
+\section{Test case and solver implementation details}
+
+\subsection{Test case description}
+
+The numerical test case considered in this work is based on the OpenFOAM tutorial
+\texttt{test/chemistry/air11}. Although the folder name refers to an eleven-species
+air model, only five chemical species are effectively considered in the present
+configuration. The number of active species is defined through the files located
+in the \texttt{0/} directory of the case. It was initially suspected that renaming
+the folder could break the case setup; however, this is not the case, and the folder
+name does not affect the execution of the solver.
+
+\subsection{Solver}
+
+The solver employed is \texttt{ShockThermo}, which is derived from
+\texttt{ShockFluid}. At each time iteration, the solver executes several predictor
+and corrector routines. For the purposes of the present study, the only method of
+interest is \texttt{thermophysicalPredictor()}, which is responsible for updating
+the thermodynamic state of the flow.
+
+\subsection{General idea of the test}
+
+The test case consists of a single computational cell with the initial velocity
+set to $\mathbf{U}=\mathbf{0}$. As a consequence, transport effects and the momentum
+equation are not relevant for this study. The objective is not to simulate a flow,
+but rather to repeatedly call \texttt{solver.thermophysicalPredictor()} in order to
+update the thermodynamic variables, in particular the translational temperature
+$T$ and the vibrational temperature $T_v$, according to the two-temperature model.
+
+\subsection{Key part of \texttt{thermophysicalPredictor}}
+
+The most important operation performed inside
+\texttt{thermophysicalPredictor()} is the call to
+\begin{verbatim}
+thermo_.correct();
+\end{verbatim}
+which appears between lines 129 and 138 of the solver source code.
+
+In an ideal implementation, the solver should not require any modification.
+The intended design is that, if a custom thermodynamics model is instantiated
+(e.g.\ \texttt{highEnthalpyMulticomponentThermo}), a call to
+\texttt{thermo\_.correct()} should automatically dispatch the appropriate overridden
+method through polymorphism.
+
+However, this mechanism does not work as expected in the present case. The class
+\texttt{highEnthalpyMulticomponentThermo} is derived from \texttt{PsiThermo}, and the
+\texttt{correct()} method that is effectively invoked corresponds to the base class
+\texttt{PsiThermo}, rather than the two-temperature implementation required for this
+work.
+
+\subsection{Workaround implemented in \texttt{ShockThermo}}
+
+To resolve this issue, the solver \texttt{ShockThermo} was modified by introducing
+an additional pointer:
+\begin{verbatim}
+highEnthalpyMulticomponentThermo* heThermoPtr_;
+\end{verbatim}
+
+In the constructor of \texttt{ShockThermo}, this pointer is initialized if the
+selected thermodynamics model corresponds to
+\texttt{highEnthalpyMulticomponentThermo}; otherwise, it is set to \texttt{nullptr}.
+Inside \texttt{thermophysicalPredictor()}, the thermodynamic update is then handled
+as follows:
+\begin{verbatim}
+if (heThermoPtr_ == nullptr)
+{
+    thermo_.correct();
+}
+else
+{
+    heThermoPtr_->correct_he();
+}
+\end{verbatim}
+
+This approach guarantees that the correct thermodynamic update method is invoked
+when the two-temperature high-enthalpy model is active, while preserving the
+standard behavior for all other thermodynamics models.
+
+\subsection{OpenFOAM state variables}
+
+At each iteration, OpenFOAM provides the following state variables:
+\begin{itemize}
+    \item $\mathbf{U}$: velocity field, where $\mathbf{U}[i]$ denotes the velocity
+    of cell $i$;
+    \item $p$: pressure field, where $p[i]$ denotes the pressure of cell $i$;
+    \item $Y_i$: species mass fractions, where $Y_i[j]$ denotes the mass fraction
+    of species $i$ in cell $j$;
+    \item $T$: translational (transport) temperature, where $T[i]$ denotes the
+    temperature of cell $i$.
+\end{itemize}
+
+The number of species is defined through the case setup and, in the present study,
+is equal to five.
+
+\subsection{Additional variables for the two-temperature model}
+
+In order to reproduce the reference results presented in
+\cite{CasseauTwoTemperatureCFD}, additional thermodynamic variables are required:
+\begin{itemize}
+    \item $T_v$: vibrational temperature;
+    \item $e_t$: translational--rotational energy;
+    \item $e_v$: vibrational--electronic energy.
+\end{itemize}
+
+These variables are created and initialized in the constructor of
+\texttt{highEnthalpyMulticomponentThermo}.
+
+\subsection{Mutation++ interface}
+
+The class \texttt{highEnthalpyMulticomponentThermo} relies on the Mutation++ library
+to model thermochemical nonequilibrium effects. Mutation++ requires precise
+information about the chemical species involved in the mixture. This configuration
+is handled in the constructor of \texttt{highEnthalpyMulticomponentThermo} (lines
+119--124 of the source code).
+
+It is critical that the species ordering is consistent between OpenFOAM and
+Mutation++. For example, if the species indexed as $Y[0]$ in OpenFOAM corresponds to
+atomic oxygen, then atomic oxygen must also be the first species in the Mutation++
+mixture. This consistency is enforced in lines 128--143 of the constructor. The
+variables $e_t$ and $e_v$ are also initialized at this stage.
+
+\subsection{Sending the thermodynamic state to Mutation++}
+
+Mutation++ requires the complete thermodynamic state of the mixture, including:
+\[
+\mathbf{U}, \quad p, \quad Y_i, \quad T, \quad T_v, \quad e_t, \quad e_v.
+\]
+These quantities are copied into temporary arrays for safety and passed to
+Mutation++ inside the method \texttt{correct\_he()} (lines 199--355 of the source
+code). The core call to Mutation++ is
+\begin{verbatim}
+mutationMixPtr_->step(
+    dtSolver,
+    rho[celli],
+    Y_mut,
+    Et_local,
+    Ev_local,
+    Ttr,
+    Tv
+);
+\end{verbatim}
+
+This function advances the translational and vibrational temperatures according to
+the two-temperature relaxation model described in
+\cite{CasseauTwoTemperatureCFD}.
+
+\subsection{Governing equations solved in the present configuration}
+
+In the present single-cell configuration, the solver advances a conservative total
+energy equation of the form
+\begin{equation}
+\frac{\partial (\rho E)}{\partial t}
+=
+Q_{\mathrm{chem}},
+\label{eq:implemented_energy}
+\end{equation}
+where
+\begin{equation}
+E = e = e_t + e_v,
+\end{equation}
+and $Q_{\mathrm{chem}}$ denotes the chemical energy source term. The vibrational
+energy is not transported spatially, but is updated locally through a relaxation
+model,
+\begin{equation}
+\frac{d e_v}{d t}
+=
+Q_{tr \leftrightarrow v}
++
+Q_{chem \to v},
+\label{eq:implemented_ev}
+\end{equation}
+which is evaluated during the thermodynamic correction step using Mutation++.
+
+\section{Results}
+\subsection{$T_t$ vs\ $T_v$}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\linewidth]{total_plot.png}
+    \caption{$T_t$ and $T_v$ over the time}
+    \label{fig:Convergence_over_time}
+\end{figure}
+Figure~\ref{fig:Convergence_over_time} shows the temporal evolution of the
+translational--rotational temperature $T_t$ and the vibrational temperature $T_v$
+for the single-cell test case. The initial conditions are set to
+$T_t = 12000~\mathrm{K}$ and $T_v = 2000~\mathrm{K}$, corresponding to a strongly
+non-equilibrium thermodynamic state.
+
+As expected from the physics of thermochemical nonequilibrium, energy is transferred
+from the translational--rotational mode to the vibrational--electronic mode through
+vibration--translation (VT) relaxation. As a result, $T_t$ decreases rapidly, while
+$T_v$ increases, until the two temperatures approach each other. After the initial
+transient, both temperatures converge toward a common equilibrium value, indicating
+the progressive restoration of thermal equilibrium between the energy modes.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{zoom_plot.png}
+    \caption{Area of intersection between two temperatures}
+    \label{fig:zoom_convergence}
+\end{figure}
+Figure~\ref{fig:zoom_convergence} provides a zoomed view of the early-time evolution,
+highlighting the region where the two temperatures intersect. This intersection
+corresponds to the point at which the vibrational--electronic energy has absorbed a
+sufficient amount of energy from the translational--rotational mode to balance the
+mode populations. Beyond this point, the relaxation process continues smoothly until
+both temperatures asymptotically converge to the same value.
+
+The observed behavior is fully consistent with the two-temperature relaxation model
+described in \cite{CasseauTwoTemperatureCFD} and confirms the correct coupling between
+the total energy equation and the local vibrational energy relaxation implemented
+through the Mutation++ interface. In particular, the absence of spatial transport
+terms ensures that the evolution of $T_t$ and $T_v$ is governed solely by chemical
+energy exchange and mode relaxation, as intended for the present zero-dimensional
+configuration.
+
+\subsection{Multi-cell speedup analysis}
+We also extended our analysis to a multi-cell configuration to evaluate the computational
+performance of the implemented two-temperature model. The test case consists of a
+three-dimensional domain discretized into a grid of \(10 \times 10 \times 10\) cells,
+so that a total of 1000 cells are simulated simultaneously by using MPI. Each cell is initialized with the same
+non-equilibrium thermodynamic state as in the single-cell test case, with \(T_t = 12000~\mathrm{K}\)
+and \(T_v = 2000~\mathrm{K}\), so the result is \textit{expected to be the same as before for each cell}.
+The delta time used for the simulation is \(1 \times 10^{-8}~\mathrm{s}\), and the end simulation time is \(1 \times 10^{-5}~\mathrm{s}\),
+so that we keep the temporal resolution consistent with the single-cell test case.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{speedup_plot.png}
+    \caption{Speedup analysis for multi-cell configuration}
+    \label{fig:speedup_analysis}
+\end{figure}
+
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+
+
+
+\end{document}
+

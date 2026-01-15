@@ -1,0 +1,13 @@
+\begin{thebibliography}{1}
+
+\bibitem{CasseauTwoTemperatureCFD}
+Vincent Casseau, Rodrigo~C. Palharini, Thomas~J. Scanlon, and Richard~E. Brown.
+\newblock A two-temperature open-source cfd model for hypersonic reacting flows, part one: Zero-dimensional analysis.
+\newblock {\em Physics of Fluids}, 28(6):--, 2016.
+
+\bibitem{versteeg2007cfd}
+H.~K. Versteeg and W.~Malalasekera.
+\newblock {\em An Introduction to Computational Fluid Dynamics: The Finite Volume Method}.
+\newblock Pearson, 2nd edition, 2007.
+
+\end{thebibliography}
