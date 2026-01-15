@@ -28,9 +28,9 @@ gradSchemes
 
 divSchemes
 {
-    default         none;
+    default         Gauss linear; //none;
     div(phi,Yi_h)   Gauss limitedLinear 1;
-     div(phi,eve)    Gauss upwind;
+    div(phi,eve)    Gauss upwind;
 
 }
 

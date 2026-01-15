@@ -7,19 +7,24 @@
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
+    version     2.0;
     format      ascii;
-    class       volScalarField;
-    location    "0";
-    object      Tve;
+    class       dictionary;
+    object      decomposeParDict;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 0 0 1 0 0 0];
-internalField   uniform 2000;
-boundaryField
+numberOfSubdomains 8;
+
+method          simple;
+
+simpleCoeffs
 {
-    allBoundaries { type zeroGradient;}
+    n           (2 2 2); // 2*2*2 = 8 subdomains
+    delta       0.001;
 }
 
-
-// ************************************************************************* //
+// Some versions of OpenFOAM look for 'coeffs' instead of 'simpleCoeffs'
+coeffs
+{
+    n           (2 2 2);
+}

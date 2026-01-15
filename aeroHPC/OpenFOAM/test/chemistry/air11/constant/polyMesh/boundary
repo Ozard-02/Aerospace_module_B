@@ -8,23 +8,20 @@
 FoamFile
 {
     format      ascii;
-    class       volScalarField;
-    location    "0";
-    object      Ydefault;
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [];
-
-internalField   uniform 1;
-
-boundaryField
-{
-   allBoundaries
+1
+(
+    allBoundaries
     {
-        type            zeroGradient;
+        type            patch;
+        nFaces          54;
+        startFace       54;
     }
-}
-
+)
 
 // ************************************************************************* //

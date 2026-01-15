@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2012                                 |
-|   \\  /    A nd           | Website:  www.openfoam.com                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  12
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -14,23 +14,24 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-convertToMeters 1;
+convertToMeters 1; // [cite: 217]
 
 vertices
 (
-    (0 0 0)
-    (1 0 0)
-    (1 1 0)
-    (0 1 0)
-    (0 0 1)
-    (1 0 1)
-    (1 1 1)
-    (0 1 1)
-);
+    (0 0 0) // 0
+    (1 0 0) // 1
+    (1 1 0) // 2
+    (0 1 0) // 3
+    (0 0 1) // 4
+    (1 0 1) // 5
+    (1 1 1) // 6
+    (0 1 1) // 7
+); // [cite: 218]
 
 blocks
 (
-    hex (0 1 2 3 4 5 6 7) (1 1 1) simpleGrading (1 1 1)
+    // Increased to 3x3x3 to allow spatial gradients [cite: 219]
+    hex (0 1 2 3 4 5 6 7) (3 3 3) simpleGrading (1 1 1)
 );
 
 edges
@@ -39,18 +40,19 @@ edges
 
 boundary
 (
-    // Set all boundaries to 'empty' to simulate infinite/0D conditions
+    // Changed from 'empty' to 'patch' to allow diffusion/flux between cells
+    // and across the boundaries.
     allBoundaries
     {
-        type empty;
+        type patch;
         faces
         (
-            (0 1 2 3)
-            (4 5 6 7)
-            (0 1 5 4)
-            (2 3 7 6)
-            (1 2 6 5)
-            (0 3 7 4)
+            (0 1 2 3) // bottom
+            (4 5 6 7) // top
+            (0 1 5 4) // front
+            (2 3 7 6) // back
+            (1 2 6 5) // right
+            (0 3 7 4) // left
         );
     }
 );

@@ -18,7 +18,7 @@ dimensions      [1 -1 -2 0 0 0 0];
 internalField   uniform 101325;
 boundaryField
 {
-    allBoundaries { type empty; }
+    allBoundaries { type zeroGradient;}
 }
 
 
