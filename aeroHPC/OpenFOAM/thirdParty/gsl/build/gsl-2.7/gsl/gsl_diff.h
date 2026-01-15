@@ -1,1 +1,0 @@
-.././../../src/gsl-2.7/./diff/gsl_diff.h

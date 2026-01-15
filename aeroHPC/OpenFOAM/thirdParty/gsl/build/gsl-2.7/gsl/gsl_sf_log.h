@@ -1,1 +1,0 @@
-.././../../src/gsl-2.7/./specfunc/gsl_sf_log.h

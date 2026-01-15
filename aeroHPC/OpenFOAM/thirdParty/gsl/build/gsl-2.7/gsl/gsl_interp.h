@@ -1,1 +1,0 @@
-.././../../src/gsl-2.7/./interpolation/gsl_interp.h

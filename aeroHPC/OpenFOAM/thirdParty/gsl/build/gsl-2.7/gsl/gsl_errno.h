@@ -1,1 +1,0 @@
-.././../../src/gsl-2.7/./err/gsl_errno.h

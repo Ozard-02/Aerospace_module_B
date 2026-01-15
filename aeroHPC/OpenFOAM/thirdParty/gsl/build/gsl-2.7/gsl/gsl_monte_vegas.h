@@ -1,1 +1,0 @@
-.././../../src/gsl-2.7/./monte/gsl_monte_vegas.h
