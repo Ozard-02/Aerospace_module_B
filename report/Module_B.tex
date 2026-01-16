@@ -398,7 +398,7 @@ which appears between lines 129 and 138 of the solver source code.
 
 In an ideal implementation, the solver should not require any modification.
 The intended design is that, if a custom thermodynamics model is instantiated
-(e.g.\ \texttt{highEnthalpyMulticomponentThermo}), a call to
+(e.g.\ \texttt{highEnthalpy\allowbreak Multicomponent\allowbreak Thermo}), a call to
 \texttt{thermo\_.correct()} should automatically dispatch the appropriate overridden
 method through polymorphism.
 
@@ -463,7 +463,7 @@ In order to reproduce the reference results presented in
 \end{itemize}
 
 These variables are created and initialized in the constructor of
-\texttt{highEnthalpyMulticomponentThermo}.
+\texttt{highEnthalpy\allowbreak Multicomponent\allowbreak Thermo}.
 
 \subsection{Mutation++ interface}
 
@@ -596,9 +596,45 @@ and the limited workload per process as the number of processes increases.
 The simulation has been run on a native linux machine with heterogeneous core architecture,
 in particular with 4 performance cores and 8 efficiency cores, thus the last run has been compromised
 by this hardware limitation.
+We also implemented a OpenMP parallelization for the correct\_he() method, but the results were not satisfactory.
+The only significant speedup has been achieved with just one core, while with more than one core the time taken increased with respect to the only MPI parallelization, 
+making OpenMP not beneficial for this specific impelmentation.
 Nevertheless, the results confirm that the implemented two-temperature model scales well
 with the number of MPI processes, making it suitable for larger-scale simulations
-involving multiple cells. 
+involving multiple cells.
+
+\subsection{Comparison with reference results}
+We compared our results with the reference data provided in
+\cite{CasseauTwoTemperatureCFD} to validate the accuracy of our implementation.
+The temperatuere profiles obtained from our OpenFOAM implementation show excellent agreement
+with the reference results, confirming that the two-temperature relaxation dynamics
+are accurately captured. Both the initial rapid decrease of \(T_t\) and the corresponding increase of \(T_v\)
+match closely with the reference curves, demonstrating that the energy exchange
+between the translational--rotational and vibrational--electronic modes is correctly modeled.
+We also compared the evolution of species mass fractions over time as presented in Figure \ref{fig:species_pl}.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\linewidth]{species_plot_0.png}
+    \caption{Species mass fractions over time}
+    \label{fig:species_mass_fractions}
+\end{figure}
+The evolution of key species such as O, O\textsubscript{2}, and N\textsubscript{2}
+also aligns well with the reference data. The consumption of O\textsubscript{2} and the production of atomic O
+are accurately reproduced, indicating that the chemical kinetics are properly integrated
+with the two-temperature thermodynamics.
+Overall, the comparison with reference results validates the fidelity of our
+OpenFOAM implementation of the two-temperature thermochemical nonequilibrium model.
+
+\section{Conclusions}
+This report presents the implementation of a two-temperature thermochemical nonequilibrium
+model for high-enthalpy air within the OpenFOAM framework. The model is based on
+the theoretical formulation described in \cite{CasseauTwoTemperatureCFD} and leverages
+the Mutation++ library for accurate thermodynamic and kinetic calculations.
+We successfully implemented teh singel cell test case, demonstrating the correct relaxation, 
+and then we extended the analysis to a multi-isolated-cell configuration to evaluate computational speedup
+provided by the OpenFOAM framework through MPI parallelization.
+
+
 
 \bibliographystyle{unsrt}
 \bibliography{references}
@@ -606,5 +642,5 @@ involving multiple cells.
 
 
 
-:qq\end{document}
+\end{document}
 
