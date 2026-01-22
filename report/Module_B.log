@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.10)  22 JAN 2026 13:08
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2025.11.10)  22 JAN 2026 15:55
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -317,13 +317,13 @@ d cor-re-sponds to the base class \OT1/cmtt/m/n/10 PsiThermo\OT1/ptm/m/n/10 ,
 File: temperature_global.png Graphic file (type png)
 <use temperature_global.png>
 Package pdftex.def Info: temperature_global.png  used on input line 538.
-(pdftex.def)             Requested size: 172.5pt x 103.49529pt.
+(pdftex.def)             Requested size: 345.0pt x 206.9972pt.
  [8]
 <temperature_zoomed.png, id=41, 722.7pt x 433.62pt>
 File: temperature_zoomed.png Graphic file (type png)
 <use temperature_zoomed.png>
 Package pdftex.def Info: temperature_zoomed.png  used on input line 556.
-(pdftex.def)             Requested size: 172.5pt x 103.49529pt.
+(pdftex.def)             Requested size: 345.0pt x 206.9972pt.
 
 Overfull \hbox (3.70619pt too wide) in paragraph at lines 548--566
 \OT1/ptm/m/n/10 ferred from the translational--rotational mode to the vibration
@@ -331,48 +331,40 @@ al--electronic mode through
  []
 
 
-Overfull \hbox (1.8266pt too wide) in paragraph at lines 567--574
+Overfull \hbox (1.8266pt too wide) in paragraph at lines 567--575
 []\OT1/ptm/m/n/10 The ob-served be-hav-ior is fully con-sis-tent with the two-t
 emperature re-lax-ation model
  []
 
-[9 <./temperature_global.png> <./temperature_zoomed.png>]
-<speedup_plot_loglog.png, id=47, 578.16pt x 433.62pt>
+[9 <./temperature_global.png>]
+<speedup_plot_loglog.png, id=46, 578.16pt x 433.62pt>
 File: speedup_plot_loglog.png Graphic file (type png)
 <use speedup_plot_loglog.png>
 Package pdftex.def Info: speedup_plot_loglog.png  used on input line 586.
-(pdftex.def)             Requested size: 172.5pt x 129.37242pt.
-
-
-LaTeX Warning: Reference `fig:species_pl' on page 10 undefined on input line 61
-4.
-
-<species_plot_0.png, id=48, 722.7pt x 505.89pt>
+(pdftex.def)             Requested size: 345.0pt x 258.74484pt.
+ [10 <./temperature_zoomed.png>] [11 <./speedup_plot_loglog.png>]
+<species_plot_0.png, id=55, 722.7pt x 505.89pt>
 File: species_plot_0.png Graphic file (type png)
 <use species_plot_0.png>
 Package pdftex.def Info: species_plot_0.png  used on input line 617.
-(pdftex.def)             Requested size: 172.5pt x 120.74449pt.
-[10 <./speedup_plot_loglog.png>]
+(pdftex.def)             Requested size: 345.0pt x 241.49672pt.
+
 Overfull \hbox (0.26614pt too wide) in paragraph at lines 629--636
 \OT1/ptm/m/n/10 This re-port presents the im-ple-men-ta-tion of a two-temperatu
 re ther-mo-chem-i-cal nonequi-
  []
 
-(./Module_B.bbl [11 <./species_plot_0.png>]) [12] (./Module_B.aux)
+[12 <./species_plot_0.png>] (./Module_B.bbl) [13] (./Module_B.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-10-24>
  ***********
-
-
-LaTeX Warning: There were undefined references.
-
  ) 
 Here is how much of TeX's memory you used:
- 2867 strings out of 467538
- 46260 string characters out of 5419551
- 453567 words of memory out of 5000000
- 31709 multiletter control sequences out of 15000+600000
+ 2866 strings out of 467538
+ 46244 string characters out of 5419551
+ 453568 words of memory out of 5000000
+ 31708 multiletter control sequences out of 15000+600000
  664517 words of font info for 111 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  59i,13n,67p,449b,332s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -387,10 +379,10 @@ ive/2025/texmf-dist/fonts/type1/urw/symbol/usyr.pfb></usr/local/texlive/2025/te
 xmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2025/texmf-dist/f
 onts/type1/urw/times/utmr8a.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1
 /urw/times/utmri8a.pfb>
-Output written on Module_B.pdf (12 pages, 608563 bytes).
+Output written on Module_B.pdf (13 pages, 608338 bytes).
 PDF statistics:
- 108 PDF objects out of 1000 (max. 8388607)
- 63 compressed objects within 1 object stream
+ 112 PDF objects out of 1000 (max. 8388607)
+ 66 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 

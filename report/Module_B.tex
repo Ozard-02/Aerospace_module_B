@@ -535,7 +535,7 @@ which is evaluated during the thermodynamic correction step using Mutation++.
 \subsection{$T_t$ vs\ $T_v$}
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.5\linewidth]{temperature_global.png}
+    \includegraphics[width=1\linewidth]{temperature_global.png}
     \caption{$T_t$ and $T_v$ over the time}
     \label{fig:Convergence_over_time}
 \end{figure}
@@ -553,7 +553,7 @@ transient, both temperatures converge toward a common equilibrium value, indicat
 the progressive restoration of thermal equilibrium between the energy modes.
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{temperature_zoomed.png}
+    \includegraphics[width=1\linewidth]{temperature_zoomed.png}
     \caption{Area of intersection between two temperatures}
     \label{fig:zoom_convergence}
 \end{figure}
@@ -571,7 +571,7 @@ through the Mutation++ interface. In particular, the absence of spatial transpor
 terms ensures that the evolution of $T_t$ and $T_v$ is governed solely by chemical
 energy exchange and mode relaxation, as intended for the present zero-dimensional
 configuration.
-
+.
 \subsection{Multi-cell speedup analysis}
 We also extended our analysis to a multi-cell configuration to evaluate the computational
 performance of the implemented two-temperature model. The test case consists of a
@@ -583,7 +583,7 @@ The delta time used for the simulation is \(1 \times 10^{-8}~\mathrm{s}\), and t
 so that we keep the temporal resolution consistent with the single-cell test case.
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{speedup_plot_loglog.png}
+    \includegraphics[width=1\linewidth]{speedup_plot_loglog.png}
     \caption{Speedup analysis for multi-cell configuration}
     \label{fig:speedup_analysis}
 \end{figure}
@@ -593,10 +593,10 @@ speedup as the number of processes increases, until we reach a plateau around 4 
 thus with 8 processes the time taken is almost the same as with 4 processes.
 This behavior is expected due to the overhead associated with MPI communication
 and the limited workload per process as the number of processes increases.
-The simulation has been run on a native linux machine with heterogeneous core architecture,
+The simulation has been run on a native Linux machine with heterogeneous core architecture,
 in particular with 4 performance cores and 8 efficiency cores, thus the last run has been compromised
 by this hardware limitation.
-We also implemented a OpenMP parallelization for the correct\_he() method, but the results were not satisfactory.
+We also implemented a OpenMP parallelization for the \texttt{correct\_he()} method, but the results were not satisfactory.
 The only significant speedup has been achieved with just one core, while with more than one core the time taken increased with respect to the only MPI parallelization, 
 making OpenMP not beneficial for this specific impelmentation.
 Nevertheless, the results confirm that the implemented two-temperature model scales well
@@ -611,10 +611,10 @@ with the reference results, confirming that the two-temperature relaxation dynam
 are accurately captured. Both the initial rapid decrease of \(T_t\) and the corresponding increase of \(T_v\)
 match closely with the reference curves, demonstrating that the energy exchange
 between the translational--rotational and vibrational--electronic modes is correctly modeled.
-We also compared the evolution of species mass fractions over time as presented in Figure \ref{fig:species_pl}.
+We also compared the evolution of species mass fractions over time as presented in Figure \ref{fig:species_mass_fractions}.
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.5\linewidth]{species_plot_0.png}
+    \includegraphics[width=1\linewidth]{species_plot_0.png}
     \caption{Species mass fractions over time}
     \label{fig:species_mass_fractions}
 \end{figure}
